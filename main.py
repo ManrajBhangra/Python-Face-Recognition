@@ -11,13 +11,13 @@ DEFAULT_ENCODINGS_PATH = Path("output/encodings.pkl") #Default location to store
 def train(model: str = "hog", encodings_location: Path = DEFAULT_ENCODINGS_PATH) ->None:
     names = [] #Store names
     encodings = [] #Store encodings of face
-    for filepath in Path("training").glob("*/*"):
+    for filepath in Path("train").glob("*/*"):
         name = filepath.parent.name #Get name of face from folder
         image = face_recognition.load_image_file(filepath) #Load Image
         
         face_locations = face_recognition.face_locations(image, model=model) #Find the face on the image
         face_encodings = face_recognition.face_encodings(image, face_locations) #Extract the encodings from image
-        
+                
         for encoding in face_encodings: #Append to respective lists
             names.append(name)
             encodings.append(encoding)
@@ -43,9 +43,9 @@ def recognize_faces(image_location: str, model: str = "hog", encodings_location 
         print(name, bound_box)
         
 def _recognize_face(unknown_encoding, loaded_encodings):
-    match = face_recognition.compare_faces(loaded_encodings["encodings"], unknown_encoding) #Find match
+    matches = face_recognition.compare_faces(loaded_encodings["encodings"], unknown_encoding) #Find match
     
-    votes = Counter(name for math, name in zip(match, loaded_encodings["names"]) if match) #Count matches
+    votes = Counter(name for is_match, name in zip(matches, loaded_encodings["names"]) if is_match) #Count matches
     
     if votes: #Return most common face
         return votes.most_common(1)[0][0]
