@@ -66,16 +66,31 @@ def _recognize_face(unknown_encoding, loaded_encodings):
 def _display_face(draw, bound_box, name):
     top, right, bottom, left = bound_box
     draw.rectangle(((left, top), (right, bottom)), outline = BOUND_BOX_COLOUR) #Draw box around face
+    third_box_size = (right-left)/3
 
-    font = ImageFont.truetype("arial.ttf", size=50) #Get font
-    bbox = font.getbbox(name) #Obtain size of font
+    font = ImageFont.truetype("arial.ttf", size=20)
+    bbox = font.getbbox(name) 
     text_width = bbox[2] - bbox[0]
     text_height = bbox[3] - bbox[1]
-    draw.rectangle((((left + right)/2 - text_width/2 - 4, bottom - 2), ((left + right)/2 + text_width/2 + 4, bottom + text_height + 15)), fill = BOUND_BOX_COLOUR, outline = BOUND_BOX_COLOUR) #Draw box to write text within
+    scale_factor = third_box_size / text_width
+    font_size = max(10, int(20*scale_factor))
+    
+    font = ImageFont.truetype("arial.ttf", size=font_size)
+    bbox = font.getbbox(name) 
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
+    draw.rectangle((((left + right)/2 - text_width/2 - 4, bottom - 2), ((left + right)/2 + text_width/2 + 4, (bottom + text_height) *1.01)), fill = BOUND_BOX_COLOUR, outline = BOUND_BOX_COLOUR) #Draw box to write text within
     draw.text(((left + right)/2 - text_width/2, bottom), name, fill = TEXT_COLOUR, font = font) #Write name of person
     
 if __name__ == "__main__":
     if not DEFAULT_ENCODINGS_PATH.exists(): #Check if model trained
         train()
         
+def test(model: str = "hog"): #Test the model using testing data
+    for filepath in Path("test").rglob("*"):
+        if filepath.is_file():
+            recognize_faces(
+                image_location=str(filepath.absolute()), model=model
+            )
+            
 recognize_faces("unknown.jpg")
