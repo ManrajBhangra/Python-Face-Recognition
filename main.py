@@ -8,6 +8,8 @@ from collections import Counter
 
 from PIL import Image, ImageDraw, ImageFont
 
+import argparse
+
 DEFAULT_ENCODINGS_PATH = Path("output/encodings.pkl") #Default location to store file
 
 BOUND_BOX_COLOUR = "red"
@@ -81,10 +83,6 @@ def _display_face(draw, bound_box, name):
     text_height = bbox[3] - bbox[1]
     draw.rectangle((((left + right)/2 - text_width/2 - 4, bottom - 2), ((left + right)/2 + text_width/2 + 4, (bottom + text_height) *1.01)), fill = BOUND_BOX_COLOUR, outline = BOUND_BOX_COLOUR) #Draw box to write text within
     draw.text(((left + right)/2 - text_width/2, bottom), name, fill = TEXT_COLOUR, font = font) #Write name of person
-    
-if __name__ == "__main__":
-    if not DEFAULT_ENCODINGS_PATH.exists(): #Check if model trained
-        train()
         
 def test(model: str = "hog"): #Test the model using testing data
     for filepath in Path("test").rglob("*"):
@@ -93,4 +91,22 @@ def test(model: str = "hog"): #Test the model using testing data
                 image_location=str(filepath.absolute()), model=model
             )
             
-recognize_faces("unknown.jpg")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Recognize faces in an image")
+    parser.add_argument("--train", action="store_true", help="Train on input data")
+    parser.add_argument("--test", action="store_true", help="test trained model")
+    parser.add_argument("--use", action="store_true", help="Use the model with an unknown image")
+    parser.add_argument("-m",action="store",default="hog",choices=["hog", "cnn"],help="Which model to use for training: hog (CPU), cnn (GPU)",)
+    parser.add_argument("-f", action="store", help="Path to an image with an unknown face")
+    args = parser.parse_args()
+    
+    if args.train:
+        if not DEFAULT_ENCODINGS_PATH.exists(): #Check if model trained
+            train(model=args.m)
+        else:
+            print("Model already trained")
+    if args.test:
+        test(model=args.m)
+    if args.use:
+        recognize_faces(image_location=args.f, model=args.m)
